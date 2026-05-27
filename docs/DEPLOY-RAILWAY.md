@@ -36,8 +36,8 @@
 | `.nvmrc` | 任意 | Node 20 を明示 |
 
 - **Build:** `npm run build`（`railway.toml`）
-- **Pre-deploy:** `prisma migrate deploy`（`railway.toml`）
-- **Start:** `npm run start:server` → `next start`（`railway.toml`）
+- **Start:** `npx prisma migrate deploy` → `next start`（`railway.toml`）
+- **必須:** Variables に `DATABASE_URL=file:/data/prod.db`（未設定だと migrate が失敗します）
 - ローカルでマイグレーション込み起動する場合は `npm start` も利用可
 
 初回デプロイ後:
@@ -60,7 +60,7 @@ Volume 内の `/data/prod.db` を毎日コピー（Railway CLI または手動�
 
 | 症状 | 対処 |
 |------|------|
-| `DATABASE_URL is not set` | Volume + `file:/data/prod.db` を設定 |
+| `DATABASE_URL is not set` / `datasource.url property is required` | Variables に `DATABASE_URL=file:/data/prod.db` を設定。Volume を `/data` にマウント |
 | `better_sqlite3` / ELF エラー | `node_modules` をコミットしていないか確認。再デプロイ |
 | マイグレーション失敗 | ログで `prisma migrate deploy` を確認 |
 | 502 / 起動しない | `PORT` は Railway が注入。`next start -H 0.0.0.0` は `package.json` 済み |

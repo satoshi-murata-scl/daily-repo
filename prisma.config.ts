@@ -3,12 +3,29 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+/** Prisma CLI（migrate 等）用。必ず文字列を返す（undefined だと migrate deploy が失敗する） */
+function resolveDatasourceUrl(): string {
+  const url = process.env.DATABASE_URL?.trim();
+  if (url) return url;
+
+  const isMigrateCommand = process.argv.some((arg) => arg.includes("migrate"));
+
+  if (process.env.NODE_ENV === "production" && isMigrateCommand) {
+    throw new Error(
+      "DATABASE_URL が未設定です。Railway の Variables に DATABASE_URL=file:/data/prod.db を設定し、Volume を /data にマウントしてください。",
+    );
+  }
+
+  // prisma generate / next build 時は DB 接続不要
+  return "file:./dev.db";
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: resolveDatasourceUrl(),
   },
 });

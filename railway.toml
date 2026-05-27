@@ -8,8 +8,8 @@ buildCommand = "npm run build"
 [deploy]
 # SQLite は1台のみ（複数レプリカでDBが壊れる）
 numReplicas = 1
-preDeployCommand = "npx prisma migrate deploy"
-startCommand = "npm run start:server"
+# Volume + DATABASE_URL が使える起動時にマイグレーション（preDeploy では env が未注入のことがある）
+startCommand = "npx prisma migrate deploy && npm run start:server"
 healthcheckPath = "/login"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
