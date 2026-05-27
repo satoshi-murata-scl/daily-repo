@@ -6,6 +6,6 @@ providers = ["node"]
 [variables]
 NIXPACKS_NODE_VERSION = "20"
 
-# "..." で Node プロバイダの nodejs/npm を維持しつつ gcc 等を追加
+# "..." で Node プロバイダの nodejs/npm を維持（nodejs は重複指定しない）
 [phases.setup]
-nixPkgs = ["...", "nodejs", "python311", "gcc"]
+nixPkgs = ["...", "python311", "gcc"]
