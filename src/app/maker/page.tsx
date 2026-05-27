@@ -12,6 +12,7 @@ import { isMakerSession, requireMakerSession } from "@/lib/maker-auth";
 import { prisma } from "@/lib/db";
 import { readStaffCreatedFlash } from "@/lib/staff-created-flash";
 import { countStoreStaff } from "@/lib/staff-quota";
+import { FlashCookieClear } from "@/components/flash-cookie-clear";
 import { JobTitleSelect } from "@/components/job-title-select";
 import { Button, Card, CardTitle, Input } from "@/components/ui";
 import { jobTitleLabel } from "@/lib/job-title";
@@ -54,9 +55,11 @@ export default async function MakerPage({
     stores.find((s) => s.storeCode === params.store) ?? stores[0] ?? null;
 
   const staffCount = selected ? await countStoreStaff(selected.id) : 0;
+  const showFlash = Boolean(createdFlash || resetFlash);
 
   return (
     <div className="mx-auto min-h-dvh max-w-2xl bg-slate-50 p-4 pb-16">
+      <FlashCookieClear active={showFlash} />
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">

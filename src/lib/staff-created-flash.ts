@@ -17,12 +17,12 @@ export async function setStaffCreatedFlash(data: StaffCreatedFlash) {
   });
 }
 
+/** Server Component 用（削除は /api/flash/clear で行う） */
 export async function readStaffCreatedFlash(): Promise<StaffCreatedFlash | null> {
   const cookieStore = await cookies();
   const raw = cookieStore.get(FLASH_COOKIE)?.value;
   if (!raw) return null;
 
-  cookieStore.delete(FLASH_COOKIE);
   try {
     return JSON.parse(raw) as StaffCreatedFlash;
   } catch {

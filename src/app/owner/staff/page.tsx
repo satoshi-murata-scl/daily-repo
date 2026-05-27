@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FlashCookieClear } from "@/components/flash-cookie-clear";
 import { AppShell } from "@/components/layout";
 import { DeleteStaffButton } from "@/components/owner/delete-staff-button";
 import { MonthSelector } from "@/components/owner/month-selector";
@@ -49,6 +50,7 @@ export default async function OwnerStaffPage({
       subtitle={`${formatMonthJa(month)}の面談ダッシュボード`}
       nav={ownerNav}
     >
+      <FlashCookieClear active={Boolean(createdFlash)} />
       {deleted && (
         <p className="rounded-xl bg-teal-50 px-4 py-2.5 text-sm font-medium text-teal-900">
           スタッフを削除しました。

@@ -191,6 +191,7 @@ export async function resetStaffPasswordAction(formData: FormData) {
   redirect(`/maker?store=${storeCode}&reset=1`);
 }
 
+/** Server Component 用（削除は /api/flash/clear で行う） */
 export async function readMakerFlash(): Promise<{
   email: string;
   password: string;
@@ -201,7 +202,6 @@ export async function readMakerFlash(): Promise<{
   const raw = cookieStore.get(MAKER_RESET_FLASH)?.value;
   if (!raw) return null;
 
-  cookieStore.delete(MAKER_RESET_FLASH);
   try {
     return JSON.parse(raw) as {
       email: string;
