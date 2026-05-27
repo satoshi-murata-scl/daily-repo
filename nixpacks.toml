@@ -1,0 +1,8 @@
+# Nixpacks: better-sqlite3 のネイティブビルド用
+# https://nixpacks.com/docs/configuration/file
+
+[variables]
+NIXPACKS_NODE_VERSION = "20"
+
+[phases.setup]
+nixPkgs = ["python311", "gcc"]

@@ -1,0 +1,16 @@
+# Railway Config-as-Code
+# https://docs.railway.com/guides/config-as-code
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm run build"
+
+[deploy]
+# SQLite は1台のみ（複数レプリカでDBが壊れる）
+numReplicas = 1
+preDeployCommand = ["npx", "prisma", "migrate", "deploy"]
+startCommand = "npm run start:server"
+healthcheckPath = "/login"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

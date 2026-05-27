@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  OWNER
+  STAFF
+}
+
+enum TaskStatus {
+  PENDING
+  DONE
+  CARRIED
+}
+
+enum JobTitle {
+  STYLIST
+  ASSISTANT
+  OTHER
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  storeCode String   @unique @default("STORE001")
+  name            String @default("サンプル店舗")
+  statementTitle  String @default("")
+  statement       String @default("")
+  pdfUrl    String?
+  createdAt DateTime @default(now())
+
+  reminderEnabled  Boolean @default(false)
+  reminderTime     String  @default("21:00")
+  lineNotifyToken  String?
+  appBaseUrl       String  @default("http://localhost:3000")
+  maxStaff         Int     @default(10)
+
+  level2MinChecks Int @default(8)
+  level3MinChecks Int @default(18)
+  level4MinChecks Int @default(30)
+  level5MinChecks Int @default(50)
+
+  staff           Staff[]
+  standardChecks  StandardCheck[]
+  roleGuidelines  RoleGuideline[]
+}
+
+model Staff {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(STAFF)
+  jobTitle     JobTitle @default(STYLIST)
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  personalMission String @default("")
+  vision30Days    String @default("")
+  personalValues  String @default("")
+  settingsMemo    String @default("")
+
+  mottoTitle String @default("")
+  mottoDesc  String @default("")
+
+  goal1Title String @default("")
+  goal1Desc  String @default("")
+  goal1Level Int    @default(1)
+
+  goal2Title String @default("")
+  goal2Desc  String @default("")
+  goal2Level Int    @default(1)
+
+  goal3Title String @default("")
+  goal3Desc  String @default("")
+  goal3Level Int    @default(1)
+
+  bizTitle    String    @default("")
+  bizDesc     String    @default("")
+  bizValue    Float?
+  bizUnit     String    @default("")
+  bizDeadline DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  actionGuidelines ActionGuideline[]
+  businessTasks    BusinessTask[]
+  dailyRecords     DailyRecord[]
+  levelHistory     LevelHistory[]
+  reminderLogs     ReminderLog[]
+  meetingNotes     MeetingNote[]
+}
+
+model ActionGuideline {
+  id          String   @id @default(cuid())
+  staffId     String
+  staff       Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  title       String
+  totalChecks Int      @default(0)
+  level                Int      @default(1)
+  ownerEvaluationLevel Int?
+  isActive             Boolean  @default(true)
+  displayOrder         Int
+  createdAt            DateTime @default(now())
+
+  dailyChecks GuidelineDailyCheck[]
+
+  @@index([staffId, isActive])
+}
+
+model StandardCheck {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  checkName    String
+  displayOrder Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([storeId, isActive])
+}
+
+model RoleGuideline {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  jobTitle     JobTitle
+  title        String
+  displayOrder Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([storeId, jobTitle, isActive])
+}
+
+model BusinessTask {
+  id            String     @id @default(cuid())
+  staffId       String
+  staff         Staff      @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  title         String
+  isDaily       Boolean    @default(true)
+  targetDate    DateTime
+  status        TaskStatus @default(PENDING)
+  carriedFromId String?
+  completedAt   DateTime?
+  createdAt     DateTime   @default(now())
+
+  @@index([staffId, targetDate, status])
+}
+
+model DailyRecord {
+  id      String   @id @default(cuid())
+  staffId String
+  staff   Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date    DateTime
+  email   String
+
+  stdCheck1  Boolean @default(false)
+  stdCheck2  Boolean @default(false)
+  stdCheck3  Boolean @default(false)
+  stdCheck4  Boolean @default(false)
+  stdCheck5  Boolean @default(false)
+  stdCheck6  Boolean @default(false)
+  stdCheck7  Boolean @default(false)
+  stdCheck8  Boolean @default(false)
+  stdCheck9  Boolean @default(false)
+  stdCheck10 Boolean @default(false)
+
+  goal1Done Boolean @default(false)
+  goal2Done Boolean @default(false)
+  goal3Done Boolean @default(false)
+
+  comment String @default("")
+  savedAt DateTime @default(now())
+
+  guidelineChecks GuidelineDailyCheck[]
+
+  @@unique([staffId, date])
+  @@index([staffId, date])
+}
+
+model GuidelineDailyCheck {
+  id            String          @id @default(cuid())
+  dailyRecordId String
+  dailyRecord   DailyRecord     @relation(fields: [dailyRecordId], references: [id], onDelete: Cascade)
+  guidelineId   String
+  guideline     ActionGuideline @relation(fields: [guidelineId], references: [id], onDelete: Cascade)
+  done          Boolean         @default(false)
+
+  @@unique([dailyRecordId, guidelineId])
+}
+
+model LevelHistory {
+  id        String   @id @default(cuid())
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  goalNo    Int
+  oldLevel  Int
+  newLevel  Int
+  changedAt DateTime @default(now())
+  changedBy String
+  guidelineId String?
+
+  @@index([staffId])
+}
+
+model ReminderLog {
+  id      String   @id @default(cuid())
+  staffId String
+  staff   Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date    DateTime
+  sentAt  DateTime @default(now())
+
+  @@unique([staffId, date])
+}
+
+model MeetingNote {
+  id         String   @id @default(cuid())
+  staffId    String
+  staff      Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  month      DateTime
+  note       String   @default("")
+  nextAction String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([staffId, month])
+  @@index([staffId])
+}

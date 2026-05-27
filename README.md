@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# デイレポ
 
-## Getting Started
+研修後に受講者と受講企業（オーナー）で共有する、毎日1〜2分の習慣化ツールです。
 
-First, run the development server:
+## 3層の設計
+
+| 層 | 内容 | 誰が設定 | スタッフの操作 |
+|----|------|----------|----------------|
+| **① 会社の軸** | 店舗ステートメント・会社の行動指針・役職別の行動指針 | オーナー | 毎朝**読むだけ**（チェックなし） |
+| **② 自分の目標** | MVV・目標1〜3 | スタッフ（設定画面） | **見るだけ**（毎日○×しない） |
+| | 細分化 → **個人の行動指針**（習慣） | スタッフ＋オーナー付与可 | ③で毎日チェック |
+| **③ 今日の記録** | 指針・一言 | スタッフ | 保存1回 |
+
+## 技術スタック
+
+- **Next.js 16**（App Router）
+- **Prisma 7** + **SQLite**（本番は PostgreSQL 等へ移行可能）
+- メール＋パスワード認証（セッション Cookie）
+
+## セットアップ
 
 ```bash
+cd daily-repo
+cp .env.example .env
+npm install
+npx prisma migrate dev
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 を開いてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## デモアカウント
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 役割 | メール | パスワード |
+|------|--------|------------|
+| オーナー | owner@demo.local | demo1234 |
+| スタッフ | staff@demo.local | demo1234 |
 
-## Learn More
+## 主な画面
 
-To learn more about Next.js, take a look at the following resources:
+### スタッフ
+- `/staff` — ①会社の軸（ステートメント → 会社指針「今日1件」→ 役職別指針「今日1件」）→ ②目標リマインド → ③行動指針・一言
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**① の表示ルール（会社・役職別とも同じ）**  
+有効な指針が複数あるとき、画面上部に **その日の「今日のひとつ」** を1件だけ大きく表示します。どの1件かは `スタッフID + 日付(YYYY-MM-DD) + 種別(company/role)` から算出する疑似ランダムで決まり、**同じ日に何度開いても同じ**、**日付が変わると別の1件**になります。残りは「ほか N 件を見る」で折りたたみ表示します。役職別指針は自分の役職に一致するものだけが対象です。
+- `/staff/settings` — 目標・MVV・行動指針（最大10）
+- `/staff/reflection` — 今月の振り返り
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### オーナー
+- `/owner` — 店舗ステートメント
+- `/owner/checks` — **会社の行動指針**（全員共通）と **役職別の行動指針**（タブ切替・読むだけ）
+- `/owner/staff` — 面談ダッシュボード・スタッフ追加/削除
+- `/owner/staff/[id]` — 面談サマリー・**行動指針の付与**・面談メモ
 
-## Deploy on Vercel
+### 製作者
+- `/maker/login` — スタッフ枠・アカウント作成（`MAKER_SECRET`）
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 本番デプロイ（Railway）
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+SQLite + Volume 構成です。手順は [docs/DEPLOY-RAILWAY.md](docs/DEPLOY-RAILWAY.md) を参照してください。
+
+- `npm start` … `prisma migrate deploy` のあと `next start`
+- `DATABASE_URL` … 本番は環境変数必須（例: `file:/data/prod.db`）
+
+## 他社への提供について
+
+現状は **1店舗・1データベース** 想定です。複数企業へ展開する場合は、店舗ごとに DB を分けるか、PostgreSQL + `store_id` によるマルチテナント化を推奨します。
