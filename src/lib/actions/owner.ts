@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireOwner } from "@/lib/auth";
+import { hashPassword, requireOwner } from "@/lib/auth";
 import { setStaffCreatedFlash } from "@/lib/staff-created-flash";
 import { createStaffMember } from "@/lib/staff-provision";
 import { MAX_ACTION_GUIDELINES } from "@/lib/guideline-limits";
@@ -276,6 +276,66 @@ export async function assignGuidelineToStaffAction(formData: FormData) {
   revalidatePath("/staff");
   revalidatePath("/staff/settings");
   redirect(`/owner/staff/${staffId}?month=${monthParam}&saved=1`);
+}
+
+export async function updateStaffEmailAction(formData: FormData) {
+  const session = await requireOwner();
+  const staffId = String(formData.get("staffId") ?? "");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const monthParam = String(formData.get("month") ?? "");
+
+  if (!staffId || !email) {
+    redirect(`/owner/staff?month=${monthParam}&error=invalid`);
+  }
+
+  const staff = await prisma.staff.findFirst({
+    where: { id: staffId, storeId: session.storeId, role: "STAFF" },
+  });
+  if (!staff) {
+    redirect(`/owner/staff?month=${monthParam}&error=staff`);
+  }
+
+  if (email !== staff.email) {
+    const taken = await prisma.staff.findUnique({ where: { email } });
+    if (taken) {
+      redirect(`/owner/staff?month=${monthParam}&error=exists`);
+    }
+    await prisma.staff.update({
+      where: { id: staffId },
+      data: { email },
+    });
+  }
+
+  revalidatePath("/owner/staff");
+  redirect(`/owner/staff?month=${monthParam}&account_saved=1`);
+}
+
+export async function resetStaffPasswordByOwnerAction(formData: FormData) {
+  const session = await requireOwner();
+  const staffId = String(formData.get("staffId") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const monthParam = String(formData.get("month") ?? "");
+
+  if (!staffId || password.length < 6) {
+    redirect(`/owner/staff?month=${monthParam}&error=invalid`);
+  }
+
+  const staff = await prisma.staff.findFirst({
+    where: { id: staffId, storeId: session.storeId, role: "STAFF" },
+  });
+  if (!staff) {
+    redirect(`/owner/staff?month=${monthParam}&error=staff`);
+  }
+
+  await prisma.staff.update({
+    where: { id: staffId },
+    data: { passwordHash: await hashPassword(password) },
+  });
+
+  await setStaffCreatedFlash({ email: staff.email, password, name: staff.name });
+
+  revalidatePath("/owner/staff");
+  redirect(`/owner/staff?month=${monthParam}&password_reset=1`);
 }
 
 export async function deleteStaffAction(formData: FormData) {

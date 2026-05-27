@@ -72,12 +72,6 @@ export default async function LoginPage({
             ログイン
           </Button>
         </form>
-
-        <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-600">
-          <p className="font-medium text-slate-800">デモアカウント</p>
-          <p className="mt-2">オーナー: owner@demo.local / demo1234</p>
-          <p>スタッフ: staff@demo.local / demo1234</p>
-        </div>
       </Card>
     </div>
   );

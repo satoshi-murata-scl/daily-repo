@@ -5,7 +5,11 @@ import { DeleteStaffButton } from "@/components/owner/delete-staff-button";
 import { MonthSelector } from "@/components/owner/month-selector";
 import { Button, Card, CardTitle, Input } from "@/components/ui";
 import { JobTitleSelect } from "@/components/job-title-select";
-import { createStaffAction } from "@/lib/actions/owner";
+import {
+  createStaffAction,
+  resetStaffPasswordByOwnerAction,
+  updateStaffEmailAction,
+} from "@/lib/actions/owner";
 import { jobTitleLabel } from "@/lib/job-title";
 import { requireOwner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -24,17 +28,30 @@ const ownerNav = [
 export default async function OwnerStaffPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; deleted?: string; created?: string; error?: string }>;
+  searchParams: Promise<{
+    month?: string;
+    deleted?: string;
+    created?: string;
+    account_saved?: string;
+    password_reset?: string;
+    error?: string;
+  }>;
 }) {
   const session = await requireOwner();
-  const { month: monthStr, deleted, error } = await searchParams;
+  const { month: monthStr, deleted, account_saved, password_reset, error } =
+    await searchParams;
   const month = parseMonthParam(monthStr);
   const nav = staffListMonthNavUrls(month);
 
-  const [summaries, quota, createdFlash] = await Promise.all([
+  const [summaries, quota, createdFlash, staffAccounts] = await Promise.all([
     getStaffListSummaries(session.storeId, month),
     getStoreStaffQuota(session.storeId),
     readStaffCreatedFlash(),
+    prisma.staff.findMany({
+      where: { storeId: session.storeId, role: "STAFF" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, email: true, jobTitle: true },
+    }),
   ]);
 
   const store = await prisma.store.findUnique({
@@ -57,9 +74,17 @@ export default async function OwnerStaffPage({
         </p>
       )}
 
+      {account_saved && (
+        <p className="rounded-xl bg-teal-50 px-4 py-2.5 text-sm font-medium text-teal-900">
+          メールアドレスを保存しました。
+        </p>
+      )}
+
       {createdFlash && (
         <Card className="border-amber-200 bg-amber-50">
-          <CardTitle>スタッフを追加しました</CardTitle>
+          <CardTitle>
+            {password_reset ? "パスワードを再設定しました" : "スタッフを追加しました"}
+          </CardTitle>
           <p className="text-sm text-slate-800">
             <strong>{createdFlash.name}</strong>（{createdFlash.email}）
           </p>
@@ -87,6 +112,11 @@ export default async function OwnerStaffPage({
           入力内容を確認してください（パスワードは6文字以上）。
         </p>
       )}
+      {error === "staff" && (
+        <p className="rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-800">
+          対象のスタッフが見つかりません。
+        </p>
+      )}
 
       <Card className="border-slate-200 bg-slate-50/80">
         <CardTitle>スタッフ枠</CardTitle>
@@ -107,6 +137,60 @@ export default async function OwnerStaffPage({
             </>
           )}
         </p>
+      </Card>
+
+      <Card>
+        <CardTitle sub="パスワードは再設定後のみ一度表示されます（保存済みのパスワードは確認できません）">
+          スタッフのログイン情報
+        </CardTitle>
+        {staffAccounts.length === 0 ? (
+          <p className="text-sm text-slate-500">スタッフがまだ登録されていません。</p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {staffAccounts.map((s) => (
+              <li key={s.id} className="space-y-4 py-4 first:pt-0 last:pb-0">
+                <div>
+                  <p className="font-medium text-slate-900">{s.name}</p>
+                  <p className="text-xs text-slate-500">{jobTitleLabel(s.jobTitle)}</p>
+                </div>
+                <form action={updateStaffEmailAction} className="flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="staffId" value={s.id} />
+                  <input type="hidden" name="month" value={nav.param} />
+                  <Input
+                    label="メールアドレス"
+                    name="email"
+                    type="email"
+                    required
+                    defaultValue={s.email}
+                    className="min-w-[220px] flex-1"
+                  />
+                  <Button type="submit" variant="secondary">
+                    メールを保存
+                  </Button>
+                </form>
+                <form
+                  action={resetStaffPasswordByOwnerAction}
+                  className="flex flex-wrap items-end gap-2"
+                >
+                  <input type="hidden" name="staffId" value={s.id} />
+                  <input type="hidden" name="month" value={nav.param} />
+                  <Input
+                    label="新しいパスワード（6文字以上）"
+                    name="password"
+                    type="password"
+                    minLength={6}
+                    required
+                    placeholder="再設定するパスワード"
+                    className="min-w-[220px] flex-1"
+                  />
+                  <Button type="submit" variant="secondary">
+                    パスワードを再設定
+                  </Button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       {canAdd && (
