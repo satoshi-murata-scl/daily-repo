@@ -1,8 +1,11 @@
-# Nixpacks: better-sqlite3 のネイティブビルド用
+# Nixpacks: Node.js + better-sqlite3 のネイティブビルド用
 # https://nixpacks.com/docs/configuration/file
+
+providers = ["node"]
 
 [variables]
 NIXPACKS_NODE_VERSION = "20"
 
+# "..." で Node プロバイダの nodejs/npm を維持しつつ gcc 等を追加
 [phases.setup]
-nixPkgs = ["python311", "gcc"]
+nixPkgs = ["...", "nodejs", "python311", "gcc"]

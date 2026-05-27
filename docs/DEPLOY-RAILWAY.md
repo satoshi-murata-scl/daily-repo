@@ -32,7 +32,7 @@
 | ファイル | 必要？ | 役割 |
 |----------|--------|------|
 | `railway.toml` | **推奨** | ビルド・起動・ヘルスチェック・レプリカ1台 |
-| `nixpacks.toml` | **推奨** | `better-sqlite3` の Linux ビルド（gcc/python） |
+| `nixpacks.toml` | **推奨** | Node プロバイダ + `better-sqlite3` ビルド（gcc/python） |
 | `.nvmrc` | 任意 | Node 20 を明示 |
 
 - **Build:** `npm run build`（`railway.toml`）
