@@ -3,6 +3,9 @@ import { prisma } from "@/lib/db";
 import { sendLineNotify } from "@/lib/line-notify";
 import { APP_TIMEZONE, todayDateOnly } from "@/lib/dates";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 /**
  * 未入力スタッフへリマインダー送信
  * 呼び出し: GET /api/cron/daily-reminder?secret=CRON_SECRET

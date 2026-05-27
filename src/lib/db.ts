@@ -10,6 +10,11 @@ const globalForPrisma = globalThis as unknown as {
 function resolveDatabaseUrl(): string {
   const url = process.env.DATABASE_URL?.trim();
   if (url) return url;
+  // Railway の build（next build）時点では Volume が未マウントで DATABASE_URL が未設定のことがある。
+  // ビルドを通すため、このフェーズではローカルの一時 DB を許容する（実運用では必ず DATABASE_URL を設定する）。
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return "file:./dev.db";
+  }
   if (process.env.NODE_ENV === "production") {
     throw new Error(
       "DATABASE_URL is not set. On Railway, mount a volume and set DATABASE_URL=file:/data/prod.db",
