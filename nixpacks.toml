@@ -1,7 +1,7 @@
 # Nixpacks: Node.js + better-sqlite3 のネイティブビルド用
 # https://nixpacks.com/docs/configuration/file
 
-providers = ["node"]
+providers = ["...", "node"]
 
 [variables]
 NIXPACKS_NODE_VERSION = "20"
