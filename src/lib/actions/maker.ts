@@ -18,6 +18,78 @@ import { countStoreStaff } from "@/lib/staff-quota";
 
 const MAKER_RESET_FLASH = "maker_reset_flash";
 
+function resolveAppBaseUrl(): string {
+  const explicit = process.env.APP_BASE_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
+  if (railwayDomain) return `https://${railwayDomain}`;
+
+  return "http://localhost:3000";
+}
+
+async function allocateStoreCode(): Promise<string> {
+  const existing = await prisma.store.findMany({ select: { storeCode: true } });
+  const used = new Set(existing.map((s) => s.storeCode));
+
+  for (let n = 1; n <= 9999; n++) {
+    const code = `STORE${String(n).padStart(3, "0")}`;
+    if (!used.has(code)) return code;
+  }
+
+  throw new Error("店舗コードを割り当てられませんでした");
+}
+
+export async function createStoreByMakerAction(formData: FormData) {
+  await requireMakerSession();
+
+  const storeName = String(formData.get("storeName") ?? "").trim();
+  const ownerEmail = String(formData.get("ownerEmail") ?? "").trim().toLowerCase();
+  const ownerPassword = String(formData.get("ownerPassword") ?? "");
+
+  if (!storeName || !ownerEmail || ownerPassword.length < 6) {
+    redirect("/maker?error=invalid");
+  }
+
+  const emailTaken = await prisma.staff.findUnique({ where: { email: ownerEmail } });
+  if (emailTaken) {
+    redirect("/maker?error=exists");
+  }
+
+  const storeCode = await allocateStoreCode();
+  const ownerName = `${storeName} オーナー`;
+
+  const store = await prisma.store.create({
+    data: {
+      storeCode,
+      name: storeName,
+      appBaseUrl: resolveAppBaseUrl(),
+      maxStaff: 10,
+    },
+  });
+
+  await prisma.staff.create({
+    data: {
+      email: ownerEmail,
+      name: ownerName,
+      passwordHash: await hashPassword(ownerPassword),
+      role: "OWNER",
+      storeId: store.id,
+    },
+  });
+
+  await setStaffCreatedFlash({
+    email: ownerEmail,
+    password: ownerPassword,
+    name: ownerName,
+  });
+
+  revalidatePath("/maker");
+  revalidatePath("/login");
+  revalidatePath("/owner");
+  redirect(`/maker?store=${storeCode}&store_created=1`);
+}
+
 export async function makerLoginAction(formData: FormData) {
   const secret = String(formData.get("secret") ?? "").trim();
 

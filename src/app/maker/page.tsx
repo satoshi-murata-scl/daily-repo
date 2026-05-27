@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   createStaffByMakerAction,
+  createStoreByMakerAction,
   makerLogoutAction,
   readMakerFlash,
   resetStaffPasswordAction,
@@ -22,6 +23,7 @@ export default async function MakerPage({
     store?: string;
     saved?: string;
     created?: string;
+    store_created?: string;
     reset?: string;
     error?: string;
   }>;
@@ -75,10 +77,20 @@ export default async function MakerPage({
         </p>
       )}
 
+      {params.store_created && (
+        <p className="mb-4 rounded-xl bg-teal-50 px-4 py-2.5 text-sm text-teal-900">
+          店舗とオーナーアカウントを作成しました。オーナーは /login からログインできます。
+        </p>
+      )}
+
       {(createdFlash || resetFlash) && (
         <Card className="mb-4 border-amber-200 bg-amber-50">
           <CardTitle>
-            {resetFlash ? "パスワードを再設定しました" : "スタッフを作成しました"}
+            {resetFlash
+              ? "パスワードを再設定しました"
+              : params.store_created
+                ? "オーナーアカウント（ログイン情報）"
+                : "スタッフを作成しました"}
           </CardTitle>
           <p className="text-sm text-slate-800">
             <strong>{(resetFlash ?? createdFlash)!.name}</strong>（
@@ -108,10 +120,44 @@ export default async function MakerPage({
           上限を現在の登録人数より少なくすることはできません。
         </p>
       )}
+      {params.error === "invalid" && (
+        <p className="mb-4 rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-800">
+          入力内容を確認してください（店舗名・メール・パスワード6文字以上）。
+        </p>
+      )}
+
+      <Card className="mb-4 border-teal-200 bg-teal-50/40">
+        <CardTitle sub="店舗コードは自動で STORE001 形式を割り当てます">
+          店舗新規作成
+        </CardTitle>
+        <form action={createStoreByMakerAction} className="space-y-3">
+          <Input label="店舗名" name="storeName" required placeholder="例：〇〇美容室" />
+          <Input
+            label="オーナーのメールアドレス"
+            name="ownerEmail"
+            type="email"
+            required
+            placeholder="owner@example.com"
+          />
+          <Input
+            label="オーナーの初期パスワード（6文字以上）"
+            name="ownerPassword"
+            type="password"
+            minLength={6}
+            required
+            placeholder="ログイン用パスワード"
+          />
+          <Button type="submit" className="w-full">
+            店舗を作成
+          </Button>
+        </form>
+      </Card>
 
       {stores.length === 0 ? (
         <Card>
-          <p className="text-sm text-slate-600">店舗がありません。seed を実行してください。</p>
+          <p className="text-sm text-slate-600">
+            まだ店舗がありません。上のフォームから最初の店舗を作成してください。
+          </p>
         </Card>
       ) : (
         <>
