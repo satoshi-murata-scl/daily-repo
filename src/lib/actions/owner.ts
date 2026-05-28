@@ -23,8 +23,9 @@ export async function updateStoreAction(formData: FormData) {
     where: { id: session.storeId },
     data: {
       name: String(formData.get("name") ?? "").trim(),
-      statementTitle: String(formData.get("statementTitle") ?? "").trim(),
-      statement: String(formData.get("statement") ?? "").trim(),
+      mission: String(formData.get("mission") ?? "").trim(),
+      vision: String(formData.get("vision") ?? "").trim(),
+      values: String(formData.get("values") ?? "").trim(),
       pdfUrl: String(formData.get("pdfUrl") ?? "").trim() || null,
     },
   });

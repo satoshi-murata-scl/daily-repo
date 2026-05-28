@@ -18,9 +18,10 @@ async function main() {
     data: {
       storeCode: "STORE001",
       name: "サンプル株式会社 本社",
-      statementTitle: "店舗ステートメント",
-      statement:
-        "私たちは、お客様とチームの双方に誠実であり続け、小さな約束を積み重ねて信頼を育てます。今日の一歩が、明日の成果につながると信じています。",
+      mission:
+        "お客様とチームの双方に誠実であり続け、小さな約束を積み重ねて信頼を育てる。",
+      vision: "地域で最も信頼されるサロン・チームになる。",
+      values: "誠実 · 感謝 · 成長 · チームワーク",
       pdfUrl: "https://example.com/branding.pdf",
       reminderEnabled: false,
       reminderTime: "21:00",

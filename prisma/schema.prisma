@@ -28,8 +28,9 @@ model Store {
   id        String   @id @default(cuid())
   storeCode String   @unique @default("STORE001")
   name            String @default("サンプル店舗")
-  statementTitle  String @default("")
-  statement       String @default("")
+  mission String @default("")
+  vision  String @default("")
+  values  String @default("")
   pdfUrl    String?
   createdAt DateTime @default(now())
 

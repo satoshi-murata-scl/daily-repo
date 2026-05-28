@@ -78,22 +78,30 @@ export default async function OwnerHomePage({
 
       <Card>
         <CardTitle sub="スタッフのデイレポ画面・最上部に表示されます">
-          店舗設定
+          会社のミッション・ビジョン・バリュー
         </CardTitle>
         <form action={updateStoreAction} className="space-y-4">
           <Input label="店舗名" name="name" defaultValue={store.name} />
-          <Input
-            label="店舗ステートメントの表示タイトル"
-            name="statementTitle"
-            defaultValue={store.statementTitle}
-            placeholder="例：店舗ステートメント、私たちの約束"
+          <Textarea
+            label="ミッション"
+            name="mission"
+            rows={4}
+            defaultValue={store.mission}
+            placeholder="私たちは何のために存在するか"
           />
           <Textarea
-            label="店舗ステートメント（本文）"
-            name="statement"
-            rows={5}
-            defaultValue={store.statement}
-            placeholder="研修で作成したステートメント全文"
+            label="ビジョン"
+            name="vision"
+            rows={4}
+            defaultValue={store.vision}
+            placeholder="目指す未来像"
+          />
+          <Textarea
+            label="バリュー"
+            name="values"
+            rows={4}
+            defaultValue={store.values}
+            placeholder="大切にする価値観・行動原則"
           />
           <Input
             label="ブランディングPDF URL"

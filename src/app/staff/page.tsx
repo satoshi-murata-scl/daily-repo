@@ -81,8 +81,9 @@ export default async function StaffDailyPage() {
       <CompanySection
         staffId={session.id}
         today={today}
-        statementTitle={store.statementTitle}
-        statement={store.statement}
+        mission={store.mission}
+        vision={store.vision}
+        values={store.values}
         companyGuidelines={companyGuidelines}
       />
 
